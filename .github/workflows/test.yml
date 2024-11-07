@@ -1,0 +1,71 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: platform_tests
+
+on:
+  push:
+    # branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11"]
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: platform
+        ports:
+          - 5432:5432
+        
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+
+      - name: Setup a local virtual environment (if no poetry.toml file)
+        run: |
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
+          poetry config virtualenvs.prefer-active-python true --local
+
+      - uses: actions/cache@v3
+        name: Define a cache for the virtual environment based on the dependencies lock file
+        with:
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+
+      - name: Install the project dependencies
+        run: poetry install --no-root
+
+      - name: Run the automated tests (for example)
+        run: |
+          source .venv/bin/activate && cd ./src && python manage.py test
+        env:
+          SECRET_KEY: pir_bol-gbq4u^+%%#dktgi1kfzk0t9q#$a!v7vxwv$&v+o6w
+          DB_NAME: platform
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DEBUG: "True"
+          HOST_IP: localhost
+          STATIC_ROOT: /static
+          DEFAULT_FROM_EMAIL: example@mail.com

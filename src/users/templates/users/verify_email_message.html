@@ -1,0 +1,13 @@
+<div >
+    <h2>Verify Email</h2>
+    <div>
+        <p>Hi {{ user.name }},</p>
+        <p>You created an account on ____, you need to verify your email. Please click on the button below to verify your email.</p>
+        <a href="http://social-club.com/verify_email/{{ token }}">
+            Verify Email
+        </a>
+        <p style="margin-top: 40px;">Or you can copy the link below to your browser</p>
+        <p>http://social-club.com/verify-email/?token={{ token }}&uid={{ uid }}</p>
+        <p>The Social Club Team</p>
+    </div>
+</div>
